@@ -1,9 +1,15 @@
 from flaskr import db
-from sqlalchemy import Column, Integer, String
+from datetime import datetime
 
 class Blog(db.Model):
     __tablename__ = 'blogs'
-    id = Column(Integer, primary_key=True)
-    title = Column(String(50), nullable=False)
-    body = Column(String(200))
-    user_name = Column(String(20))
+
+    id = db.Column(db.Integer, primary_key=True)
+    title = db.Column(db.Text, nullable=False)
+    body = db.Column(db.Text, nullable=False)
+    user_name = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+
+    def __repr__(self):
+        # デバッグ時に見やすくするための表示設定
+        return f'<Blog {self.title} by {self.user_name}>'
