@@ -24,8 +24,9 @@ def create():
         # バリデーションを実行
         errors = new_blog.validate()
 
-        # エラーがあればフォームに戻す
+        # エラーがあればフォームに戻して表示する
         if errors:
+            # エラーのリストの要素一つずつをflushに入れている
             for e in errors:
                 flash(e, 'error')
             return render_template('blogs/new.html', title=title, body=body, user_name=user_name)
@@ -45,44 +46,31 @@ def detail(blog_id):
     blog = Blog.query.get_or_404(blog_id)
     return render_template('blogs/detail.html', blog=blog)
 
+# 編集ページ (表示と更新処理) を付け加え
 @blog_bp.route('/<int:blog_id>/edit', methods=['GET', 'POST'])
 def edit(blog_id):
-    # blog_idに対応するブログを取得
+    # 編集対象のデータを取得
     blog = Blog.query.get_or_404(blog_id)
 
-    # 更新処理
     if request.method == 'POST':
-        # フォームからデータを取得してブログオブジェクトを更新
-        blog.title = request.form.get('title')
-        blog.body = request.form.get('body')
-        blog.user_name = request.form.get('user_name')
+        # フォームから送られた内容で既存データを上書き
+        blog.title = request.form['title']
+        blog.body = request.form['body']
+        blog.user_name = request.form['user_name']
 
         # バリデーションを実行
         errors = blog.validate()
-        # エラーがあればフォームに戻す
         if errors:
             for e in errors:
                 flash(e, 'error')
             return render_template('blogs/edit.html', blog=blog)
 
-        # DBへ保存
+        # DBの変更を確定（更新時はdb.session.addは不要です）
         db.session.commit()
-        flash('投稿を更新しました！', 'success')
-        # 詳細ページへリダイレクト
+        
+        flash('ブログを更新しました！', 'success')
+        # 更新後は詳細ページへ移動
         return redirect(url_for('blogs.detail', blog_id=blog.id))
 
+    # GETリクエスト時は現在のデータを編集フォーム(edit.html)に表示
     return render_template('blogs/edit.html', blog=blog)
-
-
-# 削除機能
-# /<blog_id>/delete にPOSTリクエストが来たら削除を実行
-@blog_bp.route('/<int:blog_id>/delete', methods=['POST'])
-def delete(blog_id):
-    # blog_idに対応するブログを取得
-    blog = Blog.query.get_or_404(blog_id)
-    # ブログを削除
-    db.session.delete(blog)
-    db.session.commit()
-    flash('投稿を削除しました。', 'success')
-    # 一覧ページへリダイレクト
-    return redirect(url_for('blogs.index'))
